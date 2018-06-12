@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <bool name="isTablet">false</bool>
+    <integer name="recipe_name_fonsize_below_v20">22</integer>
+    <integer name="recipe_step_shortdesc_fonsize_below_v20">18</integer>
+</resources>

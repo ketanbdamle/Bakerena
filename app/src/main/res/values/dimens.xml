@@ -1,0 +1,7 @@
+<resources>
+    <dimen name="recipe_list_card_height">200dp</dimen>
+    <dimen name="listing_recipe_name_fontsize">34sp</dimen>
+    <dimen name="item_width">350dp</dimen>
+
+    <dimen name="widget_margin">0dp</dimen>
+</resources>

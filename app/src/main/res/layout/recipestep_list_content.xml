@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Layout for each item of a horizontal recycler view showing the Recipe Step short descriptions -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:elevation="5dp"
+    android:focusable="true"
+    tools:targetApi="lollipop">
+
+    <TextView
+        android:id="@+id/recipe_step_shortdesc"
+        style="?android:attr/textAppearanceLarge"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:fontFamily="cursive"
+        android:gravity="center"
+        android:padding="16dp"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        tools:context=".ui.RecipeStepListActivity"
+        tools:text="7. Pour the batter into the prepared pan and bake for 30 minutes.\n\n Pour Pour Pour" />
+
+    <ImageView
+        android:id="@+id/goToStep"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/recipe_step_shortdesc"
+        android:layout_centerHorizontal="true"
+        android:clickable="true"
+        android:contentDescription="@string/goToStep_contentdesc"
+        android:focusable="true"
+        app:srcCompat="@drawable/ic_swap_horiz" />
+
+</RelativeLayout>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Included Layout that displays recipe ingredients and steps in Portrait Mode on narrow width devices -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="@layout/recipestep_list">
+
+    <!--  Linear Layout for steps and servings -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="45"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/ingredients_heading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:fontFamily="sans-serif-condensed"
+            android:text="@string/label_ingredients"
+            android:textColor="#212121"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/ingredients_recyclerview"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_weight="1"
+            tools:listitem="@layout/ingredients_list" />
+
+        <TextView
+            android:id="@+id/servings_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:fontFamily="sans-serif-condensed"
+            android:textColor="#212121"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            tools:text="Serves 8" />
+
+        <View
+            android:id="@+id/step_list_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:background="@color/colorPrimaryLight" />
+
+        <TextView
+            android:id="@+id/steps_heading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:background="#fffbfa"
+            android:fontFamily="sans-serif-condensed"
+            android:paddingBottom="16dp"
+            android:paddingTop="16dp"
+            android:text="@string/how_to_make_label"
+            android:textColor="#212121"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <!-- Layout for Recipe Step Horizontal Recycler View -->
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recipestep_recyclerview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_weight="25"
+        android:background="@drawable/bakery_board"
+        tools:context=".ui.RecipeStepListActivity"
+        tools:listitem="@layout/recipestep_list_content">
+
+    </android.support.v7.widget.RecyclerView>
+</merge>
