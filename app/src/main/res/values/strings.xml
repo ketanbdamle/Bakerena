@@ -1,19 +1,17 @@
 <resources>
     <string name="app_name">Bakerena</string>
-    <string name="title_activity_recipe_list">Menu</string>
     <string name="action_favorite">Favorite</string>
 
     <string name="contentapi_failure_msg">You may retry or just press Cancel to dismiss.</string>
     <string name="contentapi_failure_title">Bakerena Content Api Failure</string>
-
     <string name="nw_fail_retry">Retry</string>
     <string name="nw_fail_netsettings">Network Settings</string>
     <string name="nw_fail_cancel">Cancel</string>
-
     <string name="alertdlg_title_no_network">No Network available</string>
     <string name="alertdlg_content_no_network">There is no network available. You may retry or visit the Network Settings page to set one up?</string>
-
     <string name="no_network_show_last_saved">No Network available, displaying the saved recipes.</string>
+
+    <string name="title_activity_recipe_list">Menu</string>
     <string name="title_recipestep_list">Recipe Ingredients and Steps</string>
     <string name="title_recipestep_detail">Steps</string>
 
@@ -21,6 +19,8 @@
     <string name="servings_text_prefix">Servings - %1$s</string>
     <string name="how_to_make_label">How to make it</string>
     <string name="step_short_desc"><b>Step %1$s: </b>%2$s</string>
+    <string name="widget_empty_view_text">No favorite recipe</string>
+
     <string name="favorite_recipe_added_msg">%1$s added as your favorite recipe, and would be shown on home-screen widget.</string>
     <string name="favorite_recipe_replaced_msg">%1$s replaces %2$s as your favorite recipe.</string>
     <string name="favorite_recipe_already_msg">%1$s is already your favorite recipe.</string>
@@ -28,6 +28,5 @@
     <string name="previous_step_contentdesc">Go to previous recipe step</string>
     <string name="next_step_contentdesc">Go to next recipe step</string>
     <string name="goToStep_contentdesc">Move to next step in a cyclic manner</string>
-    <string name="widget_empty_view_text">No favorite recipe</string>
 
 </resources>
