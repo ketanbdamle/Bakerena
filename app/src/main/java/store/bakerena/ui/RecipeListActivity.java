@@ -140,7 +140,8 @@ public class RecipeListActivity extends AppCompatActivity implements LoaderManag
 
         recyclerView.setAdapter(recipeListRecyclerViewAdapter);
 
-        recyclerView.setLayoutManager(new GridLayoutManager(this, gridColCount));
+        final GridLayoutManager gridLayoutManager = new GridLayoutManager(this, gridColCount);
+        recyclerView.setLayoutManager(gridLayoutManager);
         LinearSnapHelper snapHelper = new LinearSnapHelper();
         snapHelper.attachToRecyclerView(recyclerView);
 
@@ -148,11 +149,7 @@ public class RecipeListActivity extends AppCompatActivity implements LoaderManag
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                int verticalOffset = recyclerView.computeVerticalScrollOffset();
-                final int recyclerViewChildHeight = recyclerView.getChildAt(0).getMeasuredHeight();
-                if (verticalOffset % recyclerViewChildHeight == 0) {
-                    recipeRecyclerViewScrollPosition = verticalOffset / recyclerViewChildHeight ;
-                }
+                recipeRecyclerViewScrollPosition = gridLayoutManager.findFirstVisibleItemPosition();
             }
         });
 
