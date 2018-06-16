@@ -4,4 +4,5 @@
     <dimen name="item_width">350dp</dimen>
 
     <dimen name="widget_margin">0dp</dimen>
+    <dimen name="ingredients_text_top_bottom_padding">8dp</dimen>
 </resources>

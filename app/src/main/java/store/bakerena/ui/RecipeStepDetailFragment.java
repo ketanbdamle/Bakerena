@@ -37,6 +37,8 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -57,10 +59,10 @@ import static android.support.constraint.Constraints.TAG;
  * This fragment is either contained in a {@link RecipeStepListActivity} in two-pane mode (on tablets)
  * or a {@link RecipeStepDetailActivity} on handsets.
  *
- * @version 1.0
  * @author Ketan Damle
+ * @version 1.0
  */
-public class RecipeStepDetailFragment extends Fragment{
+public class RecipeStepDetailFragment extends Fragment {
 
     private static final String RECIPE_STEP_DETAIL_FRAGMENT_TAG = RecipeStepDetailFragment.class.getName();
 
@@ -69,6 +71,10 @@ public class RecipeStepDetailFragment extends Fragment{
 
     @BindView(R.id.video_view)
     PlayerView playerView;
+
+    @Nullable
+    @BindView(R.id.recipe_thumbnail_image)
+    ImageView recipeThumbnailImage;
 
     @Nullable
     @BindView(R.id.step_details_container)
@@ -104,6 +110,7 @@ public class RecipeStepDetailFragment extends Fragment{
     private Uri recipe_uri;
 
     private boolean mTwoPane;
+    private String fragmentInvocationSource;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -117,11 +124,20 @@ public class RecipeStepDetailFragment extends Fragment{
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState == null) {
+            Log.d(RECIPE_STEP_DETAIL_FRAGMENT_TAG, "savedInstanceState is null");
             recipeDetails = getArguments().getParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_DETAILS);
             recipeStepDetails = getArguments().getParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_STEP_DETAILS);
+            fragmentInvocationSource = getArguments().getString(BakerenaConstants.BUNDLE_KEY_RECIPE_STEP_DETAIL_FRAGMENT_INVOCATION_SOURCE);
+
+            // Player state params are taken from parent activity if the fragment is part of a two-pane layout in both portrait and landscape mode.
+            playbackPosition = getArguments().getLong(BakerenaConstants.BUNDLE_KEY_PLAYBACK_POSITION);
+            currentWindow = getArguments().getInt(BakerenaConstants.BUNDLE_KEY_CURRENT_WINDOW);
+            playWhenReady = getArguments().getBoolean(BakerenaConstants.BUNDLE_KEY_PLAY_WHEN_READY);
         } else {
+            Log.d(RECIPE_STEP_DETAIL_FRAGMENT_TAG, "savedInstanceState is not null");
             recipeDetails = savedInstanceState.getParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_DETAILS);
             recipeStepDetails = savedInstanceState.getParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_STEP_DETAILS);
+            fragmentInvocationSource = getArguments().getString(BakerenaConstants.BUNDLE_KEY_RECIPE_STEP_DETAIL_FRAGMENT_INVOCATION_SOURCE);
 
             playbackPosition = savedInstanceState.getLong(BakerenaConstants.BUNDLE_KEY_PLAYBACK_POSITION);
             currentWindow = savedInstanceState.getInt(BakerenaConstants.BUNDLE_KEY_CURRENT_WINDOW);
@@ -159,16 +175,11 @@ public class RecipeStepDetailFragment extends Fragment{
 
         // Determine Recipe Uri
         if (StringUtils.isEmpty(videoUrl)) {
-            if (StringUtils.isNotEmpty(thumbnailURL) && thumbnailURL.endsWith(BakerenaConstants.MP4_FILE_EXTENSION)) {
-                // Assign thumbnailURL as video URL, as the JSON is not so correct at all times
-                videoUrl = thumbnailURL;
-                recipe_uri = Uri.parse(videoUrl);
+            if (StringUtils.isNotEmpty(thumbnailURL) && !thumbnailURL.endsWith(BakerenaConstants.MP4_FILE_EXTENSION) && (!DisplayUtils.isLandscape(getContext()) || mTwoPane)) {
+                showThumbnailInPlaceOfVideo();
             } else {
-                // If video is not available, show the step details in full screen in landscape mode instead
-                videoViewContainer.setVisibility(View.GONE);
-                if (!mTwoPane && DisplayUtils.isLandscape(getContext())) {
-                    stepDetailsContainer.setVisibility(View.VISIBLE);
-                }
+                // If video or thumbnail are not available, show the step details in full screen in landscape mode instead
+                showStepDetailsInFullScreen();
             }
         } else {
             recipe_uri = Uri.parse(videoUrl);
@@ -176,7 +187,7 @@ public class RecipeStepDetailFragment extends Fragment{
 
         // Show video in fullscreen in landscape mode, but not in master-detail layout on tablets
         boolean isTablet = getResources().getBoolean(R.bool.isTablet);
-        if(isTablet && !mTwoPane && StringUtils.isNotEmpty(videoUrl) && DisplayUtils.isLandscape(getContext())){
+        if (isTablet && !mTwoPane && StringUtils.isNotEmpty(videoUrl) && DisplayUtils.isLandscape(getContext())) {
             stepDetailsContainer.setVisibility(View.GONE);
             videoViewContainer.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, 1));
         }
@@ -219,6 +230,53 @@ public class RecipeStepDetailFragment extends Fragment{
     }
 
     /**
+     * Displays thumbnail image instead of video if video url does not exist.<br/>
+     * If error occurs while loading the thumbnail, step details are shown in full screen instead using {@link #showStepDetailsInFullScreen()}
+     */
+    private void showThumbnailInPlaceOfVideo() {
+        playerView.setVisibility(View.GONE);
+        // Setting visibility here as well, as onSuccess call is not invoked in case the image is cached.
+        recipeThumbnailImage.setVisibility(View.VISIBLE);
+
+        // Set dynamic content description
+        recipeThumbnailImage.setContentDescription(getString(R.string.recipe_step_thumbnail_image_contentdesc) + recipeStepDetails.getShortDescription());
+
+        /*
+         * Placeholders not set here, as empty thumbnail URI leads to exception, and neither normal or error placeholders are set.
+         * Incorrect images with MP$ extensions are also being filtered early, as onError handling of visibility toggling is not smooth and a with a slight delay.
+         */
+        try {
+            Picasso.with(getContext()).load(recipeStepDetails.getThumbnailURL()).fit().into(recipeThumbnailImage, new Callback() {
+                @Override
+                public void onSuccess() {
+                    recipeThumbnailImage.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                public void onError() {
+                    recipeThumbnailImage.setVisibility(View.GONE);
+                    // Both video and thumbnail cannot be displayed, hence show step details in full screen
+                    showStepDetailsInFullScreen();
+                }
+            });
+        } catch (Exception e) {
+            recipeThumbnailImage.setVisibility(View.GONE);
+            // Both video and thumbnail cannot be displayed, hence show step details in full screen
+            showStepDetailsInFullScreen();
+        }
+    }
+
+    /**
+     * Displays the step details in full screen only in landscape mode and if its not a two-pane layout.
+     */
+    private void showStepDetailsInFullScreen() {
+        videoViewContainer.setVisibility(View.GONE);
+        if (!mTwoPane && DisplayUtils.isLandscape(getContext())) {
+            stepDetailsContainer.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /**
      * Navigates to the Recipe Step Details of the specified Step.
      *
      * @param goToStepIndex Step Index of the Recipe Step to navigate to.
@@ -231,6 +289,13 @@ public class RecipeStepDetailFragment extends Fragment{
         Bundle arguments = new Bundle();
         arguments.putParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_DETAILS, recipeDetails);
         arguments.putParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_STEP_DETAILS, allRecipeStepDetails.get(goToStepIndex));
+        arguments.putString(BakerenaConstants.BUNDLE_KEY_RECIPE_STEP_DETAIL_FRAGMENT_INVOCATION_SOURCE, RecipeStepDetailFragment.class.getName());
+
+        // Send default values of the primitives for player state parameters
+        arguments.putLong(BakerenaConstants.BUNDLE_KEY_PLAYBACK_POSITION, BakerenaConstants.DEFAULT_PLAYBACK_POSITION);
+        arguments.putInt(BakerenaConstants.BUNDLE_KEY_CURRENT_WINDOW, BakerenaConstants.DEFAULT_CURRENT_WINDOW);
+        arguments.putBoolean(BakerenaConstants.BUNDLE_KEY_PLAY_WHEN_READY, BakerenaConstants.DEFAULT_PLAY_WHEN_READY);
+
         newRecipeStepDetailFragment.setArguments(arguments);
 
         fragmentTransaction.replace(R.id.recipe_step_detail_fragment_container, newRecipeStepDetailFragment);
@@ -242,18 +307,51 @@ public class RecipeStepDetailFragment extends Fragment{
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
+
+        updatePlayerStateParams();
+        updatePlayerStateInParent();
+
         outState.putParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_DETAILS, recipeDetails);
         outState.putParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_STEP_DETAILS, recipeStepDetails);
+        outState.putString(BakerenaConstants.BUNDLE_KEY_RECIPE_STEP_DETAIL_FRAGMENT_INVOCATION_SOURCE, BakerenaConstants.BUNDLE_VALUE_SCREEN_ROTATION);
 
         outState.putLong(BakerenaConstants.BUNDLE_KEY_PLAYBACK_POSITION, playbackPosition);
         outState.putInt(BakerenaConstants.BUNDLE_KEY_CURRENT_WINDOW, currentWindow);
         outState.putBoolean(BakerenaConstants.BUNDLE_KEY_PLAY_WHEN_READY, playWhenReady);
     }
 
+    /**
+     * Updates the parameters relating to the Exoplayer state.
+     */
+    private void updatePlayerStateParams() {
+        if (player != null) {
+            playbackPosition = player.getCurrentPosition();
+            currentWindow = player.getCurrentWindowIndex();
+            playWhenReady = player.getPlayWhenReady();
+        }
+    }
+
+    /**
+     * Updates or syncs the player state parameter values with those maintained in the parent activity.<br/><br/>
+     * This is essential to maintain player state on screen rotation, if both the portrait and landscape orientations have a two-pane layout.
+     * <b>Note: </b>Currently, the player state parameters are only maintained in {@link RecipeStepListActivity} that supports a two-pane layout.
+     */
+    private void updatePlayerStateInParent() {
+        if (RecipeStepListActivity.class.getName().equals(fragmentInvocationSource) && mTwoPane) {
+            RecipeStepListActivity recipeStepListActivity = (RecipeStepListActivity) getActivity();
+            recipeStepListActivity.updatePlayerStateParams(playbackPosition, currentWindow, playWhenReady);
+        }
+    }
+
     @Override
     public void onStart() {
         super.onStart();
         if (Util.SDK_INT > 23) {
+            Log.d(RECIPE_STEP_DETAIL_FRAGMENT_TAG, "Inside onStart");
+            // Fragment is instantiated on every screen rotation, thereby the player gets re-initialized when screen rotation from two-pane to single pane layout happens.
+            if (RecipeStepListActivity.class.getName().equals(fragmentInvocationSource) && !mTwoPane) {
+                return;
+            }
             initializeMediaSession();
             initializePlayer();
         }
@@ -270,6 +368,10 @@ public class RecipeStepDetailFragment extends Fragment{
             hideSystemUi();
         }
         if ((Util.SDK_INT <= 23 || player == null)) {
+            // Fragment is instantiated on every screen rotation, thereby the player gets re-initialized when screen rotation from two-pane to single pane layout happens.
+            if (RecipeStepListActivity.class.getName().equals(fragmentInvocationSource) && !mTwoPane) {
+                return;
+            }
             initializeMediaSession();
             initializePlayer();
         }
@@ -291,12 +393,12 @@ public class RecipeStepDetailFragment extends Fragment{
     /**
      * Initializes the Media Session to be enabled with media buttons, transport controls, callbacks
      * and media controller.<br/><br/>
-     *
+     * <p>
      * <b>Note: </b>Currently media button receiver functionality is not in place, hence restricting Media session initialization to a safe Version 23
      * as media button receiver is mandatory for versions below Lollipop.
      */
     private void initializeMediaSession() {
-        if(Util.SDK_INT >= 23) {
+        if (Util.SDK_INT >= 23) {
 
             // Create a MediaSessionCompat.
             mediaSessionCompat = new MediaSessionCompat(getContext(), TAG);
@@ -332,6 +434,7 @@ public class RecipeStepDetailFragment extends Fragment{
      * Sets up the Exoplayer instance.
      */
     private void initializePlayer() {
+        Log.d(RECIPE_STEP_DETAIL_FRAGMENT_TAG, "Inside initializePlayer");
         if (recipe_uri != null) {
             player = ExoPlayerFactory.newSimpleInstance(
                     new DefaultRenderersFactory(getContext()),
@@ -357,6 +460,7 @@ public class RecipeStepDetailFragment extends Fragment{
     public void onPause() {
         super.onPause();
         if (Util.SDK_INT <= 23) {
+            Log.d(RECIPE_STEP_DETAIL_FRAGMENT_TAG, "Inside onPause");
             releasePlayer();
             deactivateMediaSession();
         }
@@ -366,6 +470,7 @@ public class RecipeStepDetailFragment extends Fragment{
     public void onStop() {
         super.onStop();
         if (Util.SDK_INT > 23) {
+            Log.d(RECIPE_STEP_DETAIL_FRAGMENT_TAG, "Inside onStop");
             releasePlayer();
             deactivateMediaSession();
         }
@@ -374,6 +479,7 @@ public class RecipeStepDetailFragment extends Fragment{
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d(RECIPE_STEP_DETAIL_FRAGMENT_TAG, "Inside onDestroy");
         releasePlayer();
         deactivateMediaSession();
     }
@@ -391,8 +497,8 @@ public class RecipeStepDetailFragment extends Fragment{
     }
 
     private void deactivateMediaSession() {
-        if(Util.SDK_INT >= 23){
-            if(mediaSessionCompat!=null) {
+        if (Util.SDK_INT >= 23) {
+            if (mediaSessionCompat != null) {
                 mediaSessionCompat.setActive(false);
             }
         }

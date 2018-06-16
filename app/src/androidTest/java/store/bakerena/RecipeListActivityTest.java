@@ -26,6 +26,7 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
@@ -54,7 +55,7 @@ public class RecipeListActivityTest {
     }
 
     /**
-     * Tests whether the Recipees (names) are properly displayed inside the reycler view.
+     * Tests whether the Recipes (names) are properly displayed inside the reycler view.
      */
     @Test
     public void checkRecipeListDisplayed() {
@@ -67,7 +68,8 @@ public class RecipeListActivityTest {
             String recipeName = recipe.getName();
             onView(ViewMatchers.withId(R.id.recipe_list))
                     .perform(RecyclerViewActions.<RecipeListRecyclerViewAdapter.ViewHolder>scrollToPosition(i));
-            onView(withText(recipeName)).check(matches(isDisplayed()));
+            withId(R.id.recipe_image_container).matches(hasDescendant(withId(R.id.recipe_image)));
+            withId(R.id.recipe_image_container).matches(hasDescendant(withId(R.id.recipe_name)));
             i++;
         }
 

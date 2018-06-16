@@ -57,7 +57,7 @@ public class RecipeIngredientsWidget extends AppWidgetProvider {
         views.setRemoteAdapter(R.id.ingredients_widget_list, intent);
 
         if (favoriteRecipe != null) {
-            // Set the RecipeStepListActivity ntent to launch when clicked on an ingredient.
+            // Set the RecipeStepListActivity intent to launch when clicked on an ingredient.
             Intent appIntent = new Intent(context, RecipeStepListActivity.class);
             appIntent.putExtra(BakerenaConstants.BUNDLE_KEY_RECIPE_DETAILS, favoriteRecipe);
             appIntent.putExtra(BakerenaConstants.BUNDLE_KEY_FAVORITE_RECIPE, favoriteRecipe);

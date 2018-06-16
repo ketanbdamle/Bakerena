@@ -8,6 +8,7 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
+import android.support.design.widget.Snackbar;
 import android.support.test.espresso.IdlingResource;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
@@ -20,7 +21,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -291,7 +291,7 @@ public class RecipeListActivity extends AppCompatActivity implements LoaderManag
 
                 if (recipesJsonFromSharedPrefs != null) {
                     Log.d(RECIPE_LIST_ACTIVITY_TAG, "Inside updateDisplay - Network not available - readBakerenaJsonFromSharedPrefs returned saved JSON");
-                    Toast.makeText(this, getString(R.string.no_network_show_last_saved), Toast.LENGTH_LONG).show();
+                    Snackbar.make(getCurrentFocus(), getString(R.string.no_network_show_last_saved), Snackbar.LENGTH_LONG).setAction("Action", null).show();
 
                     progressBarFrame.setVisibility(View.GONE);
                     RecipeDetailsHandler recipeDetailsHandler = new RecipeDetailsHandler();
@@ -301,7 +301,7 @@ public class RecipeListActivity extends AppCompatActivity implements LoaderManag
                 } else {
                     Log.d(RECIPE_LIST_ACTIVITY_TAG, "Inside updateDisplay - Network not available - readBakerenaJsonFromSharedPrefs did not find a saved JSON");
                     createAlertDialog(getString(R.string.alertdlg_title_no_network), getString(R.string.alertdlg_content_no_network), true);
-                    Toast.makeText(this, getString(R.string.alertdlg_title_no_network), Toast.LENGTH_SHORT).show();
+                    Snackbar.make(getCurrentFocus(), getString(R.string.alertdlg_title_no_network), Snackbar.LENGTH_SHORT).setAction("Action", null).show();
                 }
             } else {
                 Log.d(RECIPE_LIST_ACTIVITY_TAG, "Inside updateDisplay - Network available - ContentAPI failure");

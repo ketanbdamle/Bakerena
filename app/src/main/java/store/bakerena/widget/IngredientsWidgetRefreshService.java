@@ -24,7 +24,7 @@ public class IngredientsWidgetRefreshService extends IntentService {
     }
 
     /**
-     * Initiates or starts the Intent Service to nake updates to the app widget.
+     * Initiates or starts the Intent Service to make updates to the app widget.
      *
      * @param context Context for starting the Intent Service
      */

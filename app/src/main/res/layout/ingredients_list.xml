@@ -7,7 +7,6 @@
     android:orientation="vertical">
 
     <View
-        android:id="@+id/ingredients_list_divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/colorPrimaryLight" />
@@ -16,8 +15,8 @@
         android:id="@+id/ingredient_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingBottom="8dp"
-        android:paddingTop="8dp"
+        android:paddingBottom="@dimen/ingredients_text_top_bottom_padding"
+        android:paddingTop="@dimen/ingredients_text_top_bottom_padding"
         android:textSize="16sp"
         tools:text="1. 350 G Bittersweet chocolate (60-70% cacao)" />
 

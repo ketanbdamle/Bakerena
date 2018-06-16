@@ -31,17 +31,17 @@ import store.bakerena.widget.IngredientsWidgetRefreshService;
 /**
  * An activity representing a lists of Recipe Ingredients and Steps. This activity
  * has different presentations for handset and tablet-size devices.
- *
+ * <p>
  * <br/><br/>On handsets, the activity presents a list of items, which when touched,
  * lead to a {@link RecipeStepDetailActivity} representing item details.
- *
+ * <p>
  * <br/> <br/>On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  *
  * @author Ketan Damle
  * @version 1.0
  */
-public class RecipeStepListActivity extends AppCompatActivity implements RecipeStepSelectionCallback{
+public class RecipeStepListActivity extends AppCompatActivity implements RecipeStepSelectionCallback {
 
     private static final String RECIPE_STEP_LIST_ACTIVITY_TAG = RecipeStepListActivity.class.getName();
 
@@ -75,6 +75,11 @@ public class RecipeStepListActivity extends AppCompatActivity implements RecipeS
     // RecipeStep RecyclerView Scroll Position
     private int recipeStepRVScrollPosition;
 
+    // Exoplayer state parameters
+    private long playbackPosition;
+    private int currentWindow;
+    private boolean playWhenReady = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(RECIPE_STEP_LIST_ACTIVITY_TAG, "Inside RecipeStepListActivity - onCreate");
@@ -85,8 +90,8 @@ public class RecipeStepListActivity extends AppCompatActivity implements RecipeS
             favoriteRecipe = savedInstanceState.getParcelable(BakerenaConstants.BUNDLE_KEY_FAVORITE_RECIPE);
             ingredientsRVScrollPosition = savedInstanceState.getInt(BakerenaConstants.BUNDLE_KEY_INGREDIENTS_RV_SCROLL_POSITION);
             recipeStepRVScrollPosition = savedInstanceState.getInt(BakerenaConstants.BUNDLE_KEY_RECIPESTEP_RV_SCROLL_POSITION);
-        }
-        else {
+
+        } else {
             selectedRecipe = getIntent().getParcelableExtra(BakerenaConstants.BUNDLE_KEY_RECIPE_DETAILS);
             favoriteRecipe = getIntent().getParcelableExtra(BakerenaConstants.BUNDLE_KEY_FAVORITE_RECIPE);
         }
@@ -101,15 +106,21 @@ public class RecipeStepListActivity extends AppCompatActivity implements RecipeS
             // If this view is present, then the
             // activity should be in two-pane mode.
             mTwoPane = true;
+            if (savedInstanceState != null) {
+                // Restore the saved state of Exoplayer state parameters in case of a two-pane layout irrespective of screen orientation.
+                playbackPosition = savedInstanceState.getLong(BakerenaConstants.BUNDLE_KEY_PLAYBACK_POSITION);
+                currentWindow = savedInstanceState.getInt(BakerenaConstants.BUNDLE_KEY_CURRENT_WINDOW);
+                playWhenReady = savedInstanceState.getBoolean(BakerenaConstants.BUNDLE_KEY_PLAY_WHEN_READY);
+            }
         }
 
-        if(mTwoPane){
-            onRecipeStepSelection(selectedRecipe.getSteps().get(recipeStepRVScrollPosition));
+        if (mTwoPane) {
+            showRecipeStepDetailFragment(selectedRecipe.getSteps().get(recipeStepRVScrollPosition), true);
         }
 
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
-        if(actionBar!=null) {
+        if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setTitle(selectedRecipe.getName());
         }
@@ -119,6 +130,53 @@ public class RecipeStepListActivity extends AppCompatActivity implements RecipeS
         servings.setText(BakerenaUtils.getServingsText(selectedRecipe, this));
 
         setupRecipeStepListRecyclerView();
+    }
+
+    @Override
+    public void onRecipeStepSelection(Step recipeStep) {
+        Log.d(RECIPE_STEP_LIST_ACTIVITY_TAG, "Inside onRecipeStepSelection .. ");
+        Log.d(RECIPE_STEP_LIST_ACTIVITY_TAG, "mTwoPane : " + mTwoPane);
+
+        showRecipeStepDetailFragment(recipeStep, false);
+    }
+
+    private void showRecipeStepDetailFragment(Step recipeStep, boolean isSendPlayerStateParams) {
+        Log.d(RECIPE_STEP_LIST_ACTIVITY_TAG, "Inside showRecipeStepDetailFragment .. ");
+        recipeStepRVScrollPosition = selectedRecipe.getSteps().indexOf(recipeStep);
+
+        Bundle arguments = new Bundle();
+        arguments.putParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_DETAILS, selectedRecipe);
+        arguments.putParcelable(BakerenaConstants.BUNDLE_KEY_FAVORITE_RECIPE, favoriteRecipe);
+        arguments.putParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_STEP_DETAILS, recipeStep);
+        arguments.putString(BakerenaConstants.BUNDLE_KEY_RECIPE_STEP_DETAIL_FRAGMENT_INVOCATION_SOURCE, RecipeStepListActivity.class.getName());
+
+        if (mTwoPane) {
+            if (isSendPlayerStateParams) {
+                // Pass the saved Exoplayer state to the fragment having Exoplayer to initialize it with this state.
+                populateFragmentArguments(arguments, playbackPosition, currentWindow, playWhenReady);
+            } else {
+                // Send default values of the primitives for the player state parameters.
+                populateFragmentArguments(arguments, BakerenaConstants.DEFAULT_PLAYBACK_POSITION, BakerenaConstants.DEFAULT_CURRENT_WINDOW, BakerenaConstants.DEFAULT_PLAY_WHEN_READY);
+            }
+
+            RecipeStepDetailFragment fragment = new RecipeStepDetailFragment();
+            fragment.setArguments(arguments);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.recipe_step_detail_container, fragment)
+                    .commit();
+        } else {
+            Intent intent = new Intent(this, RecipeStepDetailActivity.class);
+            // Send default values of the primitives for the player state parameters
+            populateFragmentArguments(arguments, BakerenaConstants.DEFAULT_PLAYBACK_POSITION, BakerenaConstants.DEFAULT_CURRENT_WINDOW, BakerenaConstants.DEFAULT_PLAY_WHEN_READY);
+            intent.putExtras(arguments);
+            startActivity(intent);
+        }
+    }
+
+    private void populateFragmentArguments(Bundle arguments, long playbackPosition, int currentWindow, boolean playWhenReady) {
+        arguments.putLong(BakerenaConstants.BUNDLE_KEY_PLAYBACK_POSITION, playbackPosition);
+        arguments.putInt(BakerenaConstants.BUNDLE_KEY_CURRENT_WINDOW, currentWindow);
+        arguments.putBoolean(BakerenaConstants.BUNDLE_KEY_PLAY_WHEN_READY, playWhenReady);
     }
 
     /**
@@ -164,7 +222,7 @@ public class RecipeStepListActivity extends AppCompatActivity implements RecipeS
                 super.onScrolled(recyclerView, dx, dy);
                 int horizontalOffset = recyclerView.computeHorizontalScrollOffset();
                 final int recyclerViewChildWidth = recyclerView.getChildAt(0).getMeasuredWidth();
-                if(horizontalOffset % recyclerViewChildWidth == 0){
+                if (horizontalOffset % recyclerViewChildWidth == 0) {
                     recipeStepRVScrollPosition = horizontalOffset / recyclerViewChildWidth;
                 }
             }
@@ -173,15 +231,14 @@ public class RecipeStepListActivity extends AppCompatActivity implements RecipeS
     }
 
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_recipestep_list, menu);
         MenuItem item = menu.findItem(R.id.action_favorite);
-        if(favoriteRecipe == null){
+        if (favoriteRecipe == null) {
             favoriteRecipe = BakerenaUtils.readFavoriteRecipeFromSharedPrefs(this);
         }
-        if(favoriteRecipe!=null && favoriteRecipe.getId() == selectedRecipe.getId()){
+        if (favoriteRecipe != null && favoriteRecipe.getId() == selectedRecipe.getId()) {
             item.setIcon(ContextCompat.getDrawable(this, R.drawable.ic_action_favorite));
         }
 
@@ -210,24 +267,22 @@ public class RecipeStepListActivity extends AppCompatActivity implements RecipeS
                 return true;
 
             case R.id.action_favorite:
-                if(favoriteRecipe == null) {
+                if (favoriteRecipe == null) {
                     BakerenaUtils.saveFavoriteRecipeToSharedPrefs(selectedRecipe, this);
                     favoriteRecipe = selectedRecipe;
                     item.setIcon(ContextCompat.getDrawable(this, R.drawable.ic_action_favorite));
                     Snackbar.make(getCurrentFocus(), getString(R.string.favorite_recipe_added_msg, selectedRecipe.getName()), Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     IngredientsWidgetRefreshService.startActionUpdateIngredientsWidgets(this);
-                }
-                else{
+                } else {
                     int id = favoriteRecipe.getId();
-                    if(id != selectedRecipe.getId()){
+                    if (id != selectedRecipe.getId()) {
                         String oldFavoriteRecipe = favoriteRecipe.getName();
                         favoriteRecipe = selectedRecipe;
                         BakerenaUtils.saveFavoriteRecipeToSharedPrefs(selectedRecipe, this);
                         item.setIcon(ContextCompat.getDrawable(this, R.drawable.ic_action_favorite));
                         Snackbar.make(getCurrentFocus(), getString(R.string.favorite_recipe_replaced_msg, selectedRecipe.getName(), oldFavoriteRecipe), Snackbar.LENGTH_LONG).setAction("Action", null).show();
                         IngredientsWidgetRefreshService.startActionUpdateIngredientsWidgets(this);
-                    }
-                    else{
+                    } else {
                         Snackbar.make(getCurrentFocus(), getString(R.string.favorite_recipe_already_msg, selectedRecipe.getName()), Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     }
                 }
@@ -237,6 +292,19 @@ public class RecipeStepListActivity extends AppCompatActivity implements RecipeS
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Updates the Exoplayer state parameters in sync with the player state in the child fragment.
+     *
+     * @param playbackPosition Playback position of the Exoplayer.
+     * @param currentWindow    Current Window for the Exoplayer.
+     * @param playWhenReady    true, if playback should proceed. false otherwise.
+     */
+    public void updatePlayerStateParams(long playbackPosition, int currentWindow, boolean playWhenReady) {
+        this.playbackPosition = playbackPosition;
+        this.currentWindow = currentWindow;
+        this.playWhenReady = playWhenReady;
+    }
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -244,32 +312,9 @@ public class RecipeStepListActivity extends AppCompatActivity implements RecipeS
         outState.putParcelable(BakerenaConstants.BUNDLE_KEY_FAVORITE_RECIPE, favoriteRecipe);
         outState.putInt(BakerenaConstants.BUNDLE_KEY_INGREDIENTS_RV_SCROLL_POSITION, ingredientsRVScrollPosition);
         outState.putInt(BakerenaConstants.BUNDLE_KEY_RECIPESTEP_RV_SCROLL_POSITION, recipeStepRVScrollPosition);
-    }
 
-    @Override
-    public void onRecipeStepSelection(Step recipeStep) {
-        Log.d(RECIPE_STEP_LIST_ACTIVITY_TAG, "Inside onRecipeStepSelection .. ");
-        Log.d(RECIPE_STEP_LIST_ACTIVITY_TAG, "mTwoPane : "+ mTwoPane);
-        recipeStepRVScrollPosition = selectedRecipe.getSteps().indexOf(recipeStep);
-        Bundle arguments = new Bundle();
-        arguments.putParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_DETAILS, selectedRecipe);
-        arguments.putParcelable(BakerenaConstants.BUNDLE_KEY_FAVORITE_RECIPE, favoriteRecipe);
-        arguments.putParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_STEP_DETAILS, recipeStep);
-        if (mTwoPane) {
-            RecipeStepDetailFragment fragment = new RecipeStepDetailFragment();
-            fragment.setArguments(arguments);
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.recipe_step_detail_container, fragment)
-                    .commit();
-        } else {
-            Intent intent = new Intent(this, RecipeStepDetailActivity.class);
-            intent.putExtras(arguments);
-            startActivity(intent);
-        }
-    }
-
-    @Override
-    public void onGoToStep(int stepPosition) {
-        recipeStepRecyclerView.scrollToPosition(stepPosition);
+        outState.putLong(BakerenaConstants.BUNDLE_KEY_PLAYBACK_POSITION, playbackPosition);
+        outState.putInt(BakerenaConstants.BUNDLE_KEY_CURRENT_WINDOW, currentWindow);
+        outState.putBoolean(BakerenaConstants.BUNDLE_KEY_PLAY_WHEN_READY, playWhenReady);
     }
 }

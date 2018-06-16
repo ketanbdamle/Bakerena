@@ -7,7 +7,11 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -19,8 +23,8 @@ import store.bakerena.contentapi.model.Recipe;
 /**
  * Adapter for the recycler view holding the Bakerena Recipes.
  *
- * @version 1.0
  * @author Ketan Damle
+ * @version 1.0
  */
 
 public class RecipeListRecyclerViewAdapter extends RecyclerView.Adapter<RecipeListRecyclerViewAdapter.ViewHolder> {
@@ -54,13 +58,16 @@ public class RecipeListRecyclerViewAdapter extends RecyclerView.Adapter<RecipeLi
 
     @Override
     public int getItemCount() {
-        if(recipes!=null && !recipes.isEmpty()) {
+        if (recipes != null && !recipes.isEmpty()) {
             return recipes.size();
         }
         return 0;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
+
+        @BindView(R.id.recipe_image)
+        ImageView recipeImage;
 
         @BindView(R.id.recipe_name)
         TextView recipeName;
@@ -73,6 +80,34 @@ public class RecipeListRecyclerViewAdapter extends RecyclerView.Adapter<RecipeLi
 
         void bind(final Recipe recipe) {
             this.recipeName.setText(recipe.getName());
+
+            final String recipeImageURL = recipe.getImage();
+
+            // Set dynamic content description
+            recipeImage.setContentDescription(itemView.getContext().getString(R.string.recipe_image_contentdesc) + recipe.getName());
+            /*
+             * Placeholders not set here, as empty recipeImageURL leads to exception, and neither normal or error placeholders are set.
+             */
+            try {
+                Picasso.with(itemView.getContext()).load(recipeImageURL).into(recipeImage, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        recipeImage.setVisibility(View.VISIBLE);
+                        recipeName.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onError() {
+                        recipeImage.setVisibility(View.GONE);
+                        recipeName.setVisibility(View.VISIBLE);
+                    }
+                });
+            } catch (Exception e) {
+                recipeImage.setVisibility(View.GONE);
+                recipeName.setVisibility(View.VISIBLE);
+            }
+
+
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -80,7 +115,7 @@ public class RecipeListRecyclerViewAdapter extends RecyclerView.Adapter<RecipeLi
                 }
             });
 
-            if(Build.VERSION.SDK_INT <=20){
+            if (Build.VERSION.SDK_INT <= 20) {
                 recipeName.setTextSize(TypedValue.COMPLEX_UNIT_SP, itemView.getResources().getInteger(R.integer.recipe_name_fonsize_below_v20));
             }
         }

@@ -18,7 +18,6 @@
     <string name="label_ingredients">Ingredients</string>
     <string name="servings_text_prefix">Servings - %1$s</string>
     <string name="how_to_make_label">How to make it</string>
-    <string name="step_short_desc"><b>Step %1$s: </b>%2$s</string>
     <string name="widget_empty_view_text">No favorite recipe</string>
 
     <string name="favorite_recipe_added_msg">%1$s added as your favorite recipe, and would be shown on home-screen widget.</string>
@@ -27,6 +26,7 @@
 
     <string name="previous_step_contentdesc">Go to previous recipe step</string>
     <string name="next_step_contentdesc">Go to next recipe step</string>
-    <string name="goToStep_contentdesc">Move to next step in a cyclic manner</string>
+    <string name="recipe_image_contentdesc">Recipe - </string>
+    <string name="recipe_step_thumbnail_image_contentdesc">Recipe Step - </string>
 
 </resources>

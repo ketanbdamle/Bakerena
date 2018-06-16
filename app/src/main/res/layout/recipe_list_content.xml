@@ -2,7 +2,6 @@
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/recipe_card"
     android:layout_width="wrap_content"
     android:layout_height="@dimen/recipe_list_card_height"
     android:layout_gravity="center"
@@ -14,18 +13,31 @@
     card_view:cardCornerRadius="4dp"
     card_view:cardUseCompatPadding="true">
 
-    <TextView
-        android:id="@+id/recipe_name"
+    <RelativeLayout
+        android:id="@+id/recipe_image_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentTop="true"
-        android:background="@drawable/bakery_board"
-        android:fontFamily="cursive"
-        android:gravity="center"
-        android:textColor="@color/colorPrimaryDark"
-        android:textSize="@dimen/listing_recipe_name_fontsize"
-        android:textStyle="bold"
-        tools:text="Nutella Pie" />
+        android:layout_height="match_parent">
 
+        <ImageView
+            android:id="@+id/recipe_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"
+            android:contentDescription="@string/recipe_image_contentdesc" />
+
+        <TextView
+            android:id="@+id/recipe_name"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/bakery_board"
+            android:fontFamily="cursive"
+            android:gravity="center"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="@dimen/listing_recipe_name_fontsize"
+            android:textStyle="bold"
+            tools:text="Nutella Pie" />
+
+    </RelativeLayout>
 
 </android.support.v7.widget.CardView>

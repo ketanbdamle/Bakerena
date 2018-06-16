@@ -17,10 +17,4 @@ interface RecipeStepSelectionCallback {
      */
     void onRecipeStepSelection(Step recipeStep);
 
-    /**
-     * Callback method meant to be invoked on button to navigate to a particular Recipe Step.
-     *
-     * @param stepPosition Step index of the Recipe Step one wishes to navigate to.
-     */
-    void onGoToStep(int stepPosition);
 }

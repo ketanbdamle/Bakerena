@@ -9,8 +9,6 @@ import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
-import com.google.gson.Gson;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,10 +21,12 @@ import store.bakerena.ui.IngredientsListRecyclerViewAdapter;
 import store.bakerena.ui.RecipeStepListActivity;
 import store.bakerena.ui.RecipeStepListRecyclerViewAdapter;
 import store.bakerena.utils.BakerenaUtils;
+import store.bakerena.utils.JsonUtil;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
@@ -56,8 +56,7 @@ public class RecipeStepListActivityTest {
             Context targetContext = InstrumentationRegistry.getInstrumentation()
                     .getTargetContext();
 
-            Gson gson = new Gson();
-            recipe = gson.fromJson(RECIPE_JSON, Recipe.class);
+            recipe = JsonUtil.convertToObject(RECIPE_JSON, Recipe.class);
 
             Intent result = new Intent(targetContext, RecipeStepListActivity.class);
             result.putExtra(BakerenaConstants.BUNDLE_KEY_RECIPE_DETAILS, recipe);
@@ -92,19 +91,11 @@ public class RecipeStepListActivityTest {
         int i=0;
         for(Step step : recipe.getSteps()) {
 
-            String stepShortDesc;
-            if(i==0){
-                stepShortDesc = step.getShortDescription();
-            }
-            else{
-                stepShortDesc = BakerenaUtils.getRecipeStepShortDesc(step, recipeListActivityActivityTestRule.getActivity());
-            }
-
             onView(ViewMatchers.withId(R.id.recipestep_recyclerview))
                     .perform(RecyclerViewActions.<RecipeStepListRecyclerViewAdapter.ViewHolder>scrollToPosition(i));
 
-            onView(withText(stepShortDesc)).check(matches(isDisplayed()));
-
+            withId(R.id.recipe_step_shortdesc_container).matches(hasDescendant(withId(R.id.recipe_step_image)));
+            withId(R.id.recipe_step_shortdesc_container).matches(hasDescendant(withId(R.id.recipe_step_shortdesc)));
             i++;
         }
     }

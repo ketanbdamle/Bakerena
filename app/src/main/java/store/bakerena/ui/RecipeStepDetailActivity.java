@@ -32,7 +32,7 @@ public class RecipeStepDetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recipestep_detail);
-        if(!DisplayUtils.isLandscape(this)) {
+        if (!DisplayUtils.isLandscape(this)) {
             Toolbar toolbar = findViewById(R.id.detail_toolbar);
             setSupportActionBar(toolbar);
 
@@ -45,6 +45,7 @@ public class RecipeStepDetailActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             Bundle arguments = getIntent().getExtras();
+            arguments.putString(BakerenaConstants.BUNDLE_KEY_RECIPE_STEP_DETAIL_FRAGMENT_INVOCATION_SOURCE, RecipeStepDetailActivity.class.getName());
             selectedRecipe = arguments.getParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_DETAILS);
             favoriteRecipe = arguments.getParcelable(BakerenaConstants.BUNDLE_KEY_FAVORITE_RECIPE);
 
@@ -54,8 +55,7 @@ public class RecipeStepDetailActivity extends AppCompatActivity {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.recipe_step_detail_fragment_container, fragment)
                     .commit();
-        }
-        else{
+        } else {
             selectedRecipe = savedInstanceState.getParcelable(BakerenaConstants.BUNDLE_KEY_RECIPE_DETAILS);
             favoriteRecipe = savedInstanceState.getParcelable(BakerenaConstants.BUNDLE_KEY_FAVORITE_RECIPE);
         }
